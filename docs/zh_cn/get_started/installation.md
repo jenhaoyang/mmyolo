@@ -4,13 +4,14 @@
 
 **步骤 0.** 如果你当前已经处于 mmyolo 工程目录下，则可以采用如下简化写法
 首先必須先升級pip版本>24.0
+
 ```shell
 cd mmyolo
 pip install -U openmim
 mim install -r requirements/mminstall.txt
 ```
 
-或是使用 [MIM](https://github.com/open-mmlab/mim) 安装 [MMEngine](https://github.com/open-mmlab/mmengine)、 [MMCV](https://github.com/open-mmlab/mmcv) 和 [MMDetection](https://github.com/open-mmlab/mmdetection) 。請先到[依赖]()頁面確定版本需求
+或是使用 [MIM](https://github.com/open-mmlab/mim) 安装 [MMEngine](https://github.com/open-mmlab/mmengine)、 [MMCV](https://github.com/open-mmlab/mmcv) 和 [MMDetection](https://github.com/open-mmlab/mmdetection) 。請先到[依赖](<>)頁面確定版本需求
 
 ```shell
 pip install -U openmim

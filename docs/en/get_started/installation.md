@@ -2,17 +2,18 @@
 
 ## Best Practices
 
-**Step 0.** 
+**Step 0.**
 
 If you are currently in the mmyolo project directory, you can use the following simplified commands.
 Please upgrade pip first, pip version >= 24.0 is recommended.
+
 ```shell
 cd mmyolo
 pip install -U openmim
 mim install -r requirements/mminstall.txt
 ```
 
-Or install [MMEngine](https://github.com/open-mmlab/mmengine) and [MMCV](https://github.com/open-mmlab/mmcv) using [MIM](https://github.com/open-mmlab/mim).Please check the version of the required packages in the [Dependencies]()
+Or install [MMEngine](https://github.com/open-mmlab/mmengine) and [MMCV](https://github.com/open-mmlab/mmcv) using [MIM](https://github.com/open-mmlab/mim).Please check the version of the required packages in the [Dependencies](<>)
 
 ```shell
 pip install -U openmim
@@ -20,8 +21,6 @@ mim install "mmengine>=0.7.1,<1.0.0"
 mim install "mmcv>=2.0.0rc4,<2.1.0"
 mim install "mmdet>=3.0.0,<3.1.0"
 ```
-
-
 
 **Note:**
 

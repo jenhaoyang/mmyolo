@@ -178,6 +178,9 @@ git pull upstream dev
 
   # 我们需要保证提交的代码能够通过修改模块的单元测试，以 yolov5_coco dataset 为例
   pytest tests/test_datasets/test_yolov5_coco.py
+
+  # 只重跑上次失敗的test
+  pytest tests --last-failed
   ```
 
   如果你由于缺少依赖无法运行修改模块的单元测试，可以参考[指引-单元测试](#单元测试)

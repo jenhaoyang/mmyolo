@@ -175,6 +175,9 @@ git pull upstream dev
 
   # Pass the unit test of yolov5_coco dataset
   pytest tests/test_datasets/test_yolov5_coco.py
+
+  # Only run the last fail test
+  pytest tests --last-failed
   ```
 
   If the unit test fails for lack of dependencies, you can install the dependencies referring to the [guidance](#unit-test)

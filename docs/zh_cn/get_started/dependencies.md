@@ -20,7 +20,7 @@
 MMYOLO 支持在 Linux，Windows 和 macOS 上运行。它的基本环境依赖为：
 
 - Python 3.7+
-- PyTorch 1.7+ <2.0.0
+- PyTorch 1.7+ \<2.0.0
 - CUDA 9.2+
 - GCC 5.4+
 
