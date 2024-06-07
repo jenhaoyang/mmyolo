@@ -75,7 +75,7 @@ EasyDeploy 支持的功能目前没有 MMDeploy 多，但是使用上更加简�
 
 ## 修改一些代码后是否需要重新安装 MMYOLO
 
-在不新增 py 代码情况下， 如果你遵循最佳实践，即使用 `mim install -v -e .` 安装的 MMYOLO，则对本地代码所作的任何修改都会生效，无需重新安装。但是如果你是新增了 py 文件然后在里面新增的代码，则依然需要重新安装即运行 `mim install -v -e .`。
+在不新增 py 代码情况下， 如果你遵循最佳实践，即使用 `pip install -v --no-build-isolation -e .` 安装的 MMYOLO，则对本地代码所作的任何修改都会生效，无需重新安装。但是如果你是新增了 py 文件然后在里面新增的代码，则依然需要重新安装即运行 `pip install -v --no-build-isolation -e .`。
 
 ## 如何使用多个 MMYOLO 版本进行开发
 

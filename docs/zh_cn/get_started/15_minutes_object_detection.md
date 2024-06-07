@@ -40,7 +40,7 @@ mim install -r requirements/mminstall.txt
 # Install albumentations
 mim install -r requirements/albu.txt
 # Install MMYOLO
-mim install -v -e .
+pip install -v --no-build-isolation -e .
 # "-v" 指详细说明，或更多的输出
 # "-e" 表示在可编辑模式下安装项目，因此对代码所做的任何本地修改都会生效，从而无需重新安装。
 ```

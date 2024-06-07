@@ -66,7 +66,7 @@ It is due to the assigner in RTMDet. YOLOv5 uses a simple and efficient shape-ma
 
 ## Do I need to reinstall MMYOLO after modifying some code?
 
-Without adding any new python code, and if you installed the MMYOLO by `mim install -v -e .`, any new modifications will take effect without reinstalling. However, if you add new python codes and are using them, you need to reinstall with `mim install -v -e .`.
+Without adding any new python code, and if you installed the MMYOLO by `pip install -v --no-build-isolation -e .`, any new modifications will take effect without reinstalling. However, if you add new python codes and are using them, you need to reinstall with `pip install -v --no-build-isolation -e .`.
 
 ## How to use multiple versions of MMYOLO to develop?
 

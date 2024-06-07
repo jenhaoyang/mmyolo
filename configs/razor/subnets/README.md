@@ -33,7 +33,7 @@ Install MMRazor from source
 git clone -b dev-1.x https://github.com/open-mmlab/mmrazor.git
 cd mmrazor
 # Install MMRazor
-mim install -v -e .
+pip install -v --no-build-isolation -e .
 ```
 
 ### Training commands

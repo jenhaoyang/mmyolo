@@ -154,7 +154,7 @@ cd mmyolo
 # Install albumentations
 pip install -r requirements/albu.txt
 # Install MMYOLO
-mim install -v -e .
+pip install -v --no-build-isolation -e .
 ```
 
 ## 👨‍🏫 Tutorial [🔝](#-table-of-contents)
