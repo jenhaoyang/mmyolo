@@ -20,7 +20,7 @@ In this section, we demonstrate how to prepare an environment with PyTorch.
 MMDetection works on Linux, Windows, and macOS. It requires:
 
 - Python 3.7+
-- PyTorch 1.7+
+- PyTorch 1.7+ < 2.0.0
 - CUDA 9.2+
 - GCC 5.4+
 
