@@ -59,11 +59,9 @@ class YOLOv4CSPDarknet(BaseBackbone):
     # From left to right:
     # in_channels, out_channels, num_blocks, add_identity, use_spp
     arch_settings = {
-        'P5': [[64, 128, 3, True, False], [128, 256, 6, True, False],
-               [256, 512, 9, True, False], [512, 1024, 3, True, True]],
-        'P6': [[64, 128, 3, True, False], [128, 256, 6, True, False],
-               [256, 512, 9, True, False], [512, 768, 3, True, False],
-               [768, 1024, 3, True, True]]
+        'P5': [[64, 128, 1, True, False], [128, 256, 2, True, False],
+               [256, 512, 8, True, False], [512, 1024, 8, True, True],
+               [1024, 1024, 4, True, True]]
     }
 
     def __init__(self,
@@ -132,7 +130,10 @@ class YOLOv4CSPDarknet(BaseBackbone):
         stage.append(conv_layer)
         if stage_idx == 0:
             darknet_bottleneck = DarknetBottleneck(
-                out_channels, out_channels, act_cfg=self.act_cfg)
+                out_channels,
+                out_channels,
+                norm_cfg=self.norm_cfg,
+                act_cfg=self.act_cfg)
             stage.append(darknet_bottleneck)
         else:
             csp_layer = Yolov4CSPLayer(
