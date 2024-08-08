@@ -1963,3 +1963,95 @@ class Yolov4CSPLayer(BaseModule):
         x_final = torch.cat((x_main, x_short), dim=1)
 
         return self.final_conv(self.final_activation(self.final_bn(x_final)))
+
+
+class Yolov4CSP2Layer(BaseModule):
+    """Yolov4 BottleneckCSP.
+
+    Args:
+        in_channels (int): The input channels of the CSP layer.
+        out_channels (int): The output channels of the CSP layer.
+        expand_ratio (float): Ratio to adjust the number of channels of the
+            hidden layer. Defaults to 0.5.
+        num_blocks (int): Number of blocks. Defaults to 1.
+        add_identity (bool): Whether to add identity in blocks.
+            Defaults to True.
+        use_cspnext_block (bool): Whether to use CSPNeXt block.
+            Defaults to False.
+        use_depthwise (bool): Whether to use depthwise separable convolution in
+            blocks. Defaults to False.
+        channel_attention (bool): Whether to add channel attention in each
+            stage. Defaults to True.
+        conv_cfg (dict, optional): Config dict for convolution layer.
+            Defaults to None, which means using conv2d.
+        norm_cfg (dict): Config dict for normalization layer.
+            Defaults to dict(type='BN')
+        act_cfg (dict): Config dict for activation layer.
+            Defaults to dict(type='Swish')
+        init_cfg (:obj:`ConfigDict` or dict or list[dict] or
+            list[:obj:`ConfigDict`], optional): Initialization config dict.
+            Defaults to None.
+    """
+
+    def __init__(self,
+                 in_channels: int,
+                 out_channels: int,
+                 expand_ratio: float = 0.5,
+                 num_blocks: int = 1,
+                 add_identity: bool = True,
+                 use_depthwise: bool = False,
+                 conv_cfg: OptConfigType = None,
+                 norm_cfg: ConfigType = dict(
+                     type='BN', momentum=0.03, eps=0.001),
+                 act_cfg: ConfigType = dict(type='Mish'),
+                 init_cfg: OptMultiConfig = None) -> None:
+        super().__init__(init_cfg=init_cfg)
+        block = DarknetBottleneck
+        mid_channels = int(out_channels * expand_ratio)
+        self.main_conv_before_bottleneck = ConvModule(
+            in_channels,
+            mid_channels,
+            1,
+            conv_cfg=conv_cfg,
+            norm_cfg=norm_cfg,
+            act_cfg=act_cfg)
+        self.short_conv = ConvModule(
+            mid_channels,
+            mid_channels,
+            1,
+            bias=False,
+            conv_cfg=dict(type='Conv2d'),
+            norm_cfg=None,
+            act_cfg=None)
+        self.final_conv = ConvModule(
+            2 * mid_channels,
+            out_channels,
+            1,
+            conv_cfg=conv_cfg,
+            norm_cfg=norm_cfg,
+            act_cfg=act_cfg)
+
+        self.final_bn = build_norm_layer(norm_cfg, out_channels)[1]
+        self.final_activation = build_activation_layer(act_cfg)
+
+        self.blocks = nn.Sequential(*[
+            block(
+                in_channels=mid_channels,
+                out_channels=mid_channels,
+                expansion=1.0,
+                kernel_size=(1, 3),
+                conv_cfg=conv_cfg,
+                norm_cfg=norm_cfg,
+                act_cfg=act_cfg) for _ in range(num_blocks)
+        ])
+
+    def forward(self, x: Tensor) -> Tensor:
+        """Forward function."""
+        x_short = self.short_conv(x)
+
+        x_main = self.main_conv_before_bottleneck(x)
+        x_main = self.blocks(x_main)
+
+        x_final = torch.cat((x_main, x_short), dim=1)
+
+        return self.final_conv(self.final_activation(self.final_bn(x_final)))

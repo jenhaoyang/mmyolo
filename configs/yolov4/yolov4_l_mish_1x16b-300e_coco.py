@@ -104,14 +104,14 @@ model = dict(
         norm_cfg=norm_cfg,
         act_cfg=dict(type='Mish', inplace=True)),
     neck=dict(
-        type='YOLOv5PAFPN',
+        type='YOLOv4PASPP',
         deepen_factor=deepen_factor,
         widen_factor=widen_factor,
         in_channels=[256, 512, 1024],
         out_channels=[256, 512, 1024],
         num_csp_blocks=3,
         norm_cfg=norm_cfg,
-        act_cfg=dict(type='SiLU', inplace=True)),
+        act_cfg=dict(type='Mish', inplace=True)),
     bbox_head=dict(
         type='YOLOv5Head',
         head_module=dict(

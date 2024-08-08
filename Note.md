@@ -1,5 +1,5 @@
 - inference 指令
-  configs/custom_dataset/yolov4_l_mish_1xb16-300e_5car.py  weights/yolov5_s-v61_syncbn_fast_8xb16-300e_coco_20220918_084700-86e02187.pth
+configs/custom_dataset/yolov4_l_mish_1xb16-300e_5car.py  weights/yolov5_s-v61_syncbn_fast_8xb16-300e_coco_20220918_084700-86e02187.pth
 
 configs/yolov5/yolov5_s-v61_syncbn_fast_8xb16-300e_coco.py  weights/yolov5_s-v61_syncbn_fast_8xb16-300e_coco_20220918_084700-86e02187.pth
 
