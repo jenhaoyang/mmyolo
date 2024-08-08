@@ -9,7 +9,7 @@ from mmdet.utils import ConfigType, OptMultiConfig
 
 from mmyolo.registry import MODELS
 from ..layers import (CSPLayerWithTwoConv, DarknetBottleneck, SPPFBottleneck,
-                      Yolov4CSPLayer)
+                      Yolov4CSPLayer, SPPCSPBlock)
 from ..utils import make_divisible, make_round
 from .base_backbone import BaseBackbone
 
@@ -60,7 +60,7 @@ class YOLOv4CSPDarknet(BaseBackbone):
     # in_channels, out_channels, num_blocks, add_identity, use_spp
     arch_settings = {
         'P5': [[64, 128, 1, True, False], [128, 256, 2, True, False],
-               [256, 512, 8, True, False], [512, 1024, 8, True, True],
+               [256, 512, 8, True, False], [512, 1024, 8, True, False],
                [1024, 1024, 4, True, True]]
     }
 
@@ -145,10 +145,9 @@ class YOLOv4CSPDarknet(BaseBackbone):
                 act_cfg=self.act_cfg)
             stage.append(csp_layer)
         if use_spp:
-            spp = SPPFBottleneck(
+            spp = SPPCSPBlock(
                 out_channels,
                 out_channels,
-                kernel_sizes=5,
                 norm_cfg=self.norm_cfg,
                 act_cfg=self.act_cfg)
             stage.append(spp)

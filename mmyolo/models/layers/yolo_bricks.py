@@ -1053,6 +1053,142 @@ class SPPFCSPBlock(BaseModule):
         x2 = self.short_layer(x)
         return self.final_conv(torch.cat((x1, x2), dim=1))
 
+@MODELS.register_module()
+class SPPCSPBlock(BaseModule):
+    def __init__(self,
+                 in_channels: int,
+                 out_channels: int,
+                 expand_ratio: float = 0.5,
+                 kernel_sizes: Union[int, Sequence[int]] = (5, 9, 13),
+                 is_tiny_version: bool = False,
+                 conv_cfg: OptConfigType = None,
+                 norm_cfg: ConfigType = dict(
+                     type='BN', momentum=0.03, eps=0.001),
+                 act_cfg: ConfigType = dict(type='SiLU', inplace=True),
+                 init_cfg: OptMultiConfig = None):
+        super().__init__(init_cfg=init_cfg)
+        self.is_tiny_version = is_tiny_version
+
+        mid_channels = int(2 * out_channels * expand_ratio)
+
+        if is_tiny_version:
+            raise NotImplementedError
+            self.main_layers = ConvModule(
+                in_channels,
+                mid_channels,
+                1,
+                conv_cfg=conv_cfg,
+                norm_cfg=norm_cfg,
+                act_cfg=act_cfg)
+        else:
+            self.main_layers = nn.Sequential(
+                ConvModule(
+                    in_channels,
+                    mid_channels,
+                    1,
+                    conv_cfg=conv_cfg,
+                    norm_cfg=norm_cfg,
+                    act_cfg=act_cfg),
+                ConvModule(
+                    mid_channels,
+                    mid_channels,
+                    3,
+                    padding=1,
+                    conv_cfg=conv_cfg,
+                    norm_cfg=norm_cfg,
+                    act_cfg=act_cfg),
+                ConvModule(
+                    mid_channels,
+                    mid_channels,
+                    1,
+                    conv_cfg=conv_cfg,
+                    norm_cfg=norm_cfg,
+                    act_cfg=act_cfg),
+            )
+
+        self.kernel_sizes = kernel_sizes
+        if isinstance(kernel_sizes, int):
+            self.poolings = nn.MaxPool2d(
+                kernel_size=kernel_sizes, stride=1, padding=kernel_sizes // 2)
+        else:
+            self.poolings = nn.ModuleList([
+                nn.MaxPool2d(kernel_size=ks, stride=1, padding=ks // 2)
+                for ks in kernel_sizes
+            ])
+
+        if is_tiny_version:
+            raise NotImplementedError
+            self.fuse_layers = ConvModule(
+                4 * mid_channels,
+                mid_channels,
+                1,
+                conv_cfg=conv_cfg,
+                norm_cfg=norm_cfg,
+                act_cfg=act_cfg)
+        else:
+            self.fuse_layers = nn.Sequential(
+                ConvModule(
+                    4 * mid_channels,
+                    mid_channels,
+                    1,
+                    conv_cfg=conv_cfg,
+                    norm_cfg=norm_cfg,
+                    act_cfg=act_cfg),
+                ConvModule(
+                    mid_channels,
+                    mid_channels,
+                    3,
+                    padding=1,
+                    conv_cfg=conv_cfg,
+                    norm_cfg=norm_cfg,
+                    act_cfg=act_cfg))
+
+        self.short_layer = ConvModule(
+            in_channels,
+            mid_channels,
+            1,
+            bias=False,
+            conv_cfg=conv_cfg,
+            norm_cfg=None,
+            act_cfg=None)
+
+        self.final_conv = nn.Sequential(
+            build_norm_layer(norm_cfg, out_channels)[1],
+            build_activation_layer(act_cfg),
+            ConvModule(
+            2 * mid_channels,
+            out_channels,
+            1,
+            conv_cfg=conv_cfg,
+            norm_cfg=norm_cfg,
+            act_cfg=act_cfg)
+            )
+
+    def forward(self, x) -> Tensor:
+        """Forward process
+        Args:
+            x (Tensor): The input tensor.
+        """
+        x1 = self.main_layers(x)
+        if isinstance(self.kernel_sizes, int):
+            y1 = self.poolings(x1)
+            y2 = self.poolings(y1)
+            concat_list = [x1] + [y1, y2, self.poolings(y2)]
+            if self.is_tiny_version:
+                raise NotImplementedError
+                x1 = self.fuse_layers(torch.cat(concat_list[::-1], 1))
+            else:
+                x1 = self.fuse_layers(torch.cat(concat_list, 1))
+        else:
+            concat_list = [x1] + [m(x1) for m in self.poolings]
+            if self.is_tiny_version:
+                raise NotImplementedError
+                x1 = self.fuse_layers(torch.cat(concat_list[::-1], 1))
+            else:
+                x1 = self.fuse_layers(torch.cat(concat_list, 1))
+
+        x2 = self.short_layer(x)
+        return self.final_conv(torch.cat((x1, x2), dim=1))
 
 class ImplicitA(nn.Module):
     """Implicit add layer in YOLOv7.
