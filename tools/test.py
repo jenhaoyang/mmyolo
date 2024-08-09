@@ -151,6 +151,9 @@ def main():
             DumpResults(out_file_path=args.out))
 
     # start testing
+    import torch
+    torch_input = torch.randn(1, 3, 640, 640, device='cuda')
+    onnx_program = torch.onnx.export(runner.model, torch_input, 'yolov4_mmyolo.onnx')
     runner.test()
 
 

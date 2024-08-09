@@ -59,9 +59,9 @@ class YOLOv4CSPDarknet(BaseBackbone):
     # From left to right:
     # in_channels, out_channels, num_blocks, add_identity, use_spp
     arch_settings = {
-        'P5': [[64, 128, 1, True, False], [128, 256, 2, True, False],
-               [256, 512, 8, True, False], [512, 1024, 8, True, False],
-               [1024, 1024, 4, True, True]]
+        'P5': [[32, 64, 1, True, False], [64, 128, 2, True, False],
+               [128, 256, 8, True, False], [256, 512, 8, True, False],
+               [512, 1024, 4, True, True]]
     }
 
     def __init__(self,
@@ -70,7 +70,7 @@ class YOLOv4CSPDarknet(BaseBackbone):
                  deepen_factor: float = 1.0,
                  widen_factor: float = 1.0,
                  input_channels: int = 3,
-                 out_indices: Tuple[int] = (2, 3, 4),
+                 out_indices: Tuple[int] = (3, 4, 5),
                  frozen_stages: int = -1,
                  norm_cfg: ConfigType = dict(
                      type='BN', momentum=0.03, eps=0.001),
@@ -147,7 +147,7 @@ class YOLOv4CSPDarknet(BaseBackbone):
         if use_spp:
             spp = SPPCSPBlock(
                 out_channels,
-                out_channels,
+                out_channels / 2,
                 norm_cfg=self.norm_cfg,
                 act_cfg=self.act_cfg)
             stage.append(spp)

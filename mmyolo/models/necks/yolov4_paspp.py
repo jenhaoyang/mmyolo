@@ -58,10 +58,11 @@ class YOLOv4PASPP(BaseYOLONeck):
         Returns:
             nn.Module: The reduce layer.
         """
-        if idx == len(self.in_channels) - 1:
+        #if idx != len(self.in_channels) - 1:
+        if True:
             layer = ConvModule(
                 make_divisible(self.in_channels[idx], self.widen_factor),
-                make_divisible(self.in_channels[idx - 1], self.widen_factor),
+                make_divisible(self.out_channels[idx], self.widen_factor),
                 1,
                 norm_cfg=self.norm_cfg,
                 act_cfg=self.act_cfg)
@@ -86,9 +87,9 @@ class YOLOv4PASPP(BaseYOLONeck):
 
         if idx == 1:
             return Yolov4CSP2Layer(
-                make_divisible(self.in_channels[idx - 1] * 2,
+                make_divisible(self.in_channels[idx - 1],
                                self.widen_factor),
-                make_divisible(self.in_channels[idx - 1], self.widen_factor),
+                make_divisible(self.out_channels[idx - 1], self.widen_factor),
                 num_blocks=make_round(self.num_csp_blocks, self.deepen_factor),
                 add_identity=False,
                 norm_cfg=self.norm_cfg,
@@ -96,9 +97,9 @@ class YOLOv4PASPP(BaseYOLONeck):
         else:
             return nn.Sequential(
                 Yolov4CSP2Layer(
-                    make_divisible(self.in_channels[idx - 1] * 2,
-                                   self.widen_factor),
                     make_divisible(self.in_channels[idx - 1],
+                                   self.widen_factor),
+                    make_divisible(self.out_channels[idx - 1],
                                    self.widen_factor),
                     num_blocks=make_round(self.num_csp_blocks,
                                           self.deepen_factor),
@@ -106,9 +107,9 @@ class YOLOv4PASPP(BaseYOLONeck):
                     norm_cfg=self.norm_cfg,
                     act_cfg=self.act_cfg),
                 ConvModule(
-                    make_divisible(self.in_channels[idx - 1],
-                                   self.widen_factor),
                     make_divisible(self.in_channels[idx - 2],
+                                   self.widen_factor),
+                    make_divisible(self.out_channels[idx - 2],
                                    self.widen_factor),
                     kernel_size=1,
                     norm_cfg=self.norm_cfg,

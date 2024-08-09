@@ -1070,6 +1070,7 @@ class SPPCSPBlock(BaseModule):
         self.is_tiny_version = is_tiny_version
 
         mid_channels = int(2 * out_channels * expand_ratio)
+        out_channels = int(out_channels)
 
         if is_tiny_version:
             raise NotImplementedError
@@ -1153,7 +1154,7 @@ class SPPCSPBlock(BaseModule):
             act_cfg=None)
 
         self.final_conv = nn.Sequential(
-            build_norm_layer(norm_cfg, out_channels)[1],
+            build_norm_layer(norm_cfg, 2 * mid_channels)[1],
             build_activation_layer(act_cfg),
             ConvModule(
             2 * mid_channels,
@@ -1915,7 +1916,7 @@ class Yolov4CSPLayer(BaseModule):
             norm_cfg=norm_cfg,
             act_cfg=act_cfg)
         self.main_conv2_after_bottleneck = ConvModule(
-            in_channels,
+            mid_channels,
             mid_channels,
             1,
             bias=False,
@@ -2007,7 +2008,7 @@ class Yolov4CSP2Layer(BaseModule):
                  init_cfg: OptMultiConfig = None) -> None:
         super().__init__(init_cfg=init_cfg)
         block = DarknetBottleneck
-        mid_channels = int(out_channels * expand_ratio)
+        mid_channels = int(in_channels * expand_ratio)
         self.main_conv_before_bottleneck = ConvModule(
             in_channels,
             mid_channels,
@@ -2031,7 +2032,7 @@ class Yolov4CSP2Layer(BaseModule):
             norm_cfg=norm_cfg,
             act_cfg=act_cfg)
 
-        self.final_bn = build_norm_layer(norm_cfg, out_channels)[1]
+        self.final_bn = build_norm_layer(norm_cfg, mid_channels * 2)[1]
         self.final_activation = build_activation_layer(act_cfg)
 
         self.blocks = nn.Sequential(*[
@@ -2040,6 +2041,7 @@ class Yolov4CSP2Layer(BaseModule):
                 out_channels=mid_channels,
                 expansion=1.0,
                 kernel_size=(1, 3),
+                add_identity=add_identity,
                 conv_cfg=conv_cfg,
                 norm_cfg=norm_cfg,
                 act_cfg=act_cfg) for _ in range(num_blocks)
@@ -2047,9 +2049,8 @@ class Yolov4CSP2Layer(BaseModule):
 
     def forward(self, x: Tensor) -> Tensor:
         """Forward function."""
-        x_short = self.short_conv(x)
-
         x_main = self.main_conv_before_bottleneck(x)
+        x_short = self.short_conv(x_main)
         x_main = self.blocks(x_main)
 
         x_final = torch.cat((x_main, x_short), dim=1)
