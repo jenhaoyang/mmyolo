@@ -34,7 +34,7 @@ def get_prior_xy_info(index: int, num_base_priors: int,
 
 @MODELS.register_module()
 class YOLOv4HeadModule(BaseModule):
-    """YOLOv5Head head module used in `YOLOv5`.
+    """YOLOv4Head head module used in `YOLOv4`.
 
     Args:
         num_classes (int): Number of categories excluding the background
@@ -135,7 +135,7 @@ class YOLOv4HeadModule(BaseModule):
 
 @MODELS.register_module()
 class YOLOv4Head(BaseDenseHead):
-    """YOLOv5Head head used in `YOLOv5`.
+    """YOLOv4Head head used in `YOLOv4`.
 
     Args:
         head_module(ConfigType): Base module used for YOLOv5Head
