@@ -7,14 +7,13 @@ from mmcv.cnn import ConvModule
 from mmdet.utils import ConfigType, OptMultiConfig
 
 from mmyolo.registry import MODELS
+from ..layers import Yolov4CSP2Layer
 from ..utils import make_divisible, make_round
 from .base_yolo_neck import BaseYOLONeck
-from ..layers import Yolov4CSP2Layer
 
 
 @MODELS.register_module()
 class YOLOv4PASPP(BaseYOLONeck):
-
 
     def __init__(self,
                  in_channels: List[int],
@@ -58,8 +57,7 @@ class YOLOv4PASPP(BaseYOLONeck):
         Returns:
             nn.Module: The reduce layer.
         """
-        #if idx != len(self.in_channels) - 1:
-        if True:
+        if idx != len(self.in_channels) - 1:
             layer = ConvModule(
                 make_divisible(self.in_channels[idx], self.widen_factor),
                 make_divisible(self.out_channels[idx], self.widen_factor),
@@ -71,9 +69,16 @@ class YOLOv4PASPP(BaseYOLONeck):
 
         return layer
 
-    def build_upsample_layer(self, *args, **kwargs) -> nn.Module:
+    def build_upsample_layer(self, idx, *args, **kwargs) -> nn.Module:
         """build upsample layer."""
-        return nn.Upsample(scale_factor=2, mode='nearest')
+        return nn.Sequential(
+            ConvModule(
+                make_divisible(self.in_channels[idx - 1], self.widen_factor),
+                make_divisible(self.out_channels[idx - 1], self.widen_factor),
+                kernel_size=1,
+                norm_cfg=self.norm_cfg,
+                act_cfg=self.act_cfg),
+            nn.Upsample(scale_factor=2, mode='nearest'))
 
     def build_top_down_layer(self, idx: int):
         """build top down layer.
@@ -84,36 +89,13 @@ class YOLOv4PASPP(BaseYOLONeck):
         Returns:
             nn.Module: The top down layer.
         """
-
-        if idx == 1:
-            return Yolov4CSP2Layer(
-                make_divisible(self.in_channels[idx - 1],
-                               self.widen_factor),
-                make_divisible(self.out_channels[idx - 1], self.widen_factor),
-                num_blocks=make_round(self.num_csp_blocks, self.deepen_factor),
-                add_identity=False,
-                norm_cfg=self.norm_cfg,
-                act_cfg=self.act_cfg)
-        else:
-            return nn.Sequential(
-                Yolov4CSP2Layer(
-                    make_divisible(self.in_channels[idx - 1],
-                                   self.widen_factor),
-                    make_divisible(self.out_channels[idx - 1],
-                                   self.widen_factor),
-                    num_blocks=make_round(self.num_csp_blocks,
-                                          self.deepen_factor),
-                    add_identity=False,
-                    norm_cfg=self.norm_cfg,
-                    act_cfg=self.act_cfg),
-                ConvModule(
-                    make_divisible(self.in_channels[idx - 2],
-                                   self.widen_factor),
-                    make_divisible(self.out_channels[idx - 2],
-                                   self.widen_factor),
-                    kernel_size=1,
-                    norm_cfg=self.norm_cfg,
-                    act_cfg=self.act_cfg))
+        return Yolov4CSP2Layer(
+            make_divisible(self.in_channels[idx - 1], self.widen_factor),
+            make_divisible(self.out_channels[idx - 1], self.widen_factor),
+            num_blocks=make_round(self.num_csp_blocks, self.deepen_factor),
+            add_identity=False,
+            norm_cfg=self.norm_cfg,
+            act_cfg=self.act_cfg)
 
     def build_downsample_layer(self, idx: int) -> nn.Module:
         """build downsample layer.
