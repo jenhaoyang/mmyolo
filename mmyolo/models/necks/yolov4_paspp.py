@@ -60,7 +60,7 @@ class YOLOv4PASPP(BaseYOLONeck):
         if idx != len(self.in_channels) - 1:
             layer = ConvModule(
                 make_divisible(self.in_channels[idx], self.widen_factor),
-                make_divisible(self.out_channels[idx], self.widen_factor),
+                make_divisible(self.in_channels[idx] / 2, self.widen_factor),
                 1,
                 norm_cfg=self.norm_cfg,
                 act_cfg=self.act_cfg)
@@ -74,7 +74,7 @@ class YOLOv4PASPP(BaseYOLONeck):
         return nn.Sequential(
             ConvModule(
                 make_divisible(self.in_channels[idx - 1], self.widen_factor),
-                make_divisible(self.out_channels[idx - 1], self.widen_factor),
+                make_divisible(self.in_channels[idx - 1] / 2, self.widen_factor),
                 kernel_size=1,
                 norm_cfg=self.norm_cfg,
                 act_cfg=self.act_cfg),
@@ -91,7 +91,7 @@ class YOLOv4PASPP(BaseYOLONeck):
         """
         return Yolov4CSP2Layer(
             make_divisible(self.in_channels[idx - 1], self.widen_factor),
-            make_divisible(self.out_channels[idx - 1], self.widen_factor),
+            make_divisible(self.in_channels[idx - 1] / 2, self.widen_factor),
             num_blocks=make_round(self.num_csp_blocks, self.deepen_factor),
             add_identity=False,
             norm_cfg=self.norm_cfg,
@@ -107,8 +107,8 @@ class YOLOv4PASPP(BaseYOLONeck):
             nn.Module: The downsample layer.
         """
         return ConvModule(
-            make_divisible(self.in_channels[idx], self.widen_factor),
-            make_divisible(self.in_channels[idx], self.widen_factor),
+            make_divisible(self.out_channels[idx] / 2, self.widen_factor),
+            make_divisible(self.out_channels[idx], self.widen_factor),
             kernel_size=3,
             stride=2,
             padding=1,
@@ -125,13 +125,20 @@ class YOLOv4PASPP(BaseYOLONeck):
             nn.Module: The bottom up layer.
         """
         return Yolov4CSP2Layer(
-            make_divisible(self.in_channels[idx] * 2, self.widen_factor),
-            make_divisible(self.in_channels[idx + 1], self.widen_factor),
+            make_divisible(self.out_channels[idx+1], self.widen_factor),
+            make_divisible(self.out_channels[idx+1] / 2, self.widen_factor),
             num_blocks=make_round(self.num_csp_blocks, self.deepen_factor),
             add_identity=False,
             norm_cfg=self.norm_cfg,
             act_cfg=self.act_cfg)
 
-    def build_out_layer(self, *args, **kwargs) -> nn.Module:
+    def build_out_layer(self, idx, *args, **kwargs) -> nn.Module:
         """build out layer."""
-        return nn.Identity()
+        return ConvModule(
+            make_divisible(self.out_channels[idx]/2, self.widen_factor),
+            make_divisible(self.out_channels[idx], self.widen_factor),
+            kernel_size=3,
+            stride=1,
+            padding=1,
+            norm_cfg=self.norm_cfg,
+            act_cfg=self.act_cfg)

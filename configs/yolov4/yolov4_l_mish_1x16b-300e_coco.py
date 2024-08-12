@@ -108,7 +108,7 @@ model = dict(
         deepen_factor=deepen_factor,
         widen_factor=widen_factor,
         in_channels=[256, 512, 512],
-        out_channels=[128, 256, 256],
+        out_channels=[256, 512, 1024],
         num_csp_blocks=2,
         norm_cfg=norm_cfg,
         act_cfg=dict(type='Mish', inplace=True)),
