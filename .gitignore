@@ -129,3 +129,4 @@ yolov5-6.1/
 mm-venv/
 weights/
 *.onnx
+my_exp/

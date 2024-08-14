@@ -69,7 +69,7 @@ widen_factor = 1.0
 # Strides of multi-scale prior box
 strides = [8, 16, 32]
 num_det_layers = 3  # The number of model output scales
-norm_cfg = dict(type='BN')  # Normalization config
+norm_cfg = dict(type='BN', momentum=0.03, eps=0.001)  # Normalization config
 
 # -----train val related-----
 affine_scale = 0.5  # YOLOv5RandomAffine scaling ratio
@@ -89,6 +89,7 @@ max_keep_ckpts = 3
 # be turned on, which can speed up training.
 env_cfg = dict(cudnn_benchmark=True)
 
+#randomness = dict(seed=0)
 # ===============================Unmodified in most cases====================
 model = dict(
     type='YOLODetector',
