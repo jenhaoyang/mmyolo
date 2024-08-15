@@ -57,7 +57,7 @@ class YOLOv5ParamSchedulerHook(ParamSchedulerHook):
         Args:
             runner (Runner): The runner of the training process.
         """
-        optimizer = runner.optim_wrapper.optimizer
+        optimizer = runner.optim_wrapper
         for group in optimizer.param_groups:
             # If the param is never be scheduled, record the current value
             # as the initial value.
@@ -84,7 +84,7 @@ class YOLOv5ParamSchedulerHook(ParamSchedulerHook):
         """
         cur_iters = runner.iter
         cur_epoch = runner.epoch
-        optimizer = runner.optim_wrapper.optimizer
+        optimizer = runner.optim_wrapper
 
         # The minimum warmup is self.warmup_mim_iter
         warmup_total_iters = max(
@@ -124,7 +124,7 @@ class YOLOv5ParamSchedulerHook(ParamSchedulerHook):
             return
 
         cur_epoch = runner.epoch
-        optimizer = runner.optim_wrapper.optimizer
+        optimizer = runner.optim_wrapper
         for group_idx, param in enumerate(optimizer.param_groups):
             param['lr'] = self._base_lr[group_idx] * self.scheduler_fn(
                 cur_epoch)
