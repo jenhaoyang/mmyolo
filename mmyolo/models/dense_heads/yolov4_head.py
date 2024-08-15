@@ -89,7 +89,7 @@ class YOLOv4HeadModule(BaseModule):
             self.convs_pred.append(conv_pred)
 
     def init_weights(self):
-        """Initialize the bias of YOLOv5 head."""
+        """Initialize the bias of YOLOv4 head."""
         super().init_weights()
         for mi, s in zip(self.convs_pred, self.featmap_strides):  # from
             b = mi.bias.data.view(self.num_base_priors, -1)
