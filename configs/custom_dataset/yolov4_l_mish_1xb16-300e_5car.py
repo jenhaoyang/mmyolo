@@ -1,22 +1,9 @@
 _base_ = '../yolov4/yolov4_l_mish_1x16b-300e_coco.py'
 
 max_epochs = 1000
-data_root = 'data/coco20/'
+data_root = 'data/eastcoast_5car/'
 #class_names = ('person','bicycle','car','motorbike','bus','truck','ambulance','fire truck','police','trailer','semi-trailer','SUV','VAN','dump truck','tractor','tank truck', )
-class_names = ('person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus',
-               'train', 'truck', 'boat', 'traffic light', 'fire hydrant',
-               'stop sign', 'parking meter', 'bench', 'bird', 'cat', 'dog',
-               'horse', 'sheep', 'cow', 'elephant', 'bear', 'zebra', 'giraffe',
-               'backpack', 'umbrella', 'handbag', 'tie', 'suitcase', 'frisbee',
-               'skis', 'snowboard', 'sports ball', 'kite', 'baseball bat',
-               'baseball glove', 'skateboard', 'surfboard', 'tennis racket',
-               'bottle', 'wine glass', 'cup', 'fork', 'knife', 'spoon', 'bowl',
-               'banana', 'apple', 'sandwich', 'orange', 'broccoli', 'carrot',
-               'hot dog', 'pizza', 'donut', 'cake', 'chair', 'couch',
-               'potted plant', 'bed', 'dining table', 'toilet', 'tv', 'laptop',
-               'mouse', 'remote', 'keyboard', 'cell phone', 'microwave',
-               'oven', 'toaster', 'sink', 'refrigerator', 'book', 'clock',
-               'vase', 'scissors', 'teddy bear', 'hair drier', 'toothbrush')
+class_names = ('car', 'motorbike', 'truck', 'bus', 'smallbus')
 
 num_classes = len(class_names)
 metainfo = dict(
@@ -34,25 +21,11 @@ anchors = [
 train_batch_size_per_gpu = 16
 train_num_workers = 4  # 推荐使用 train_num_workers = nGPU x 4
 
-save_epoch_intervals = 2  # 每 interval 轮迭代进行一次保存一次权重
+save_epoch_intervals = 4  # 每 interval 轮迭代进行一次保存一次权重
 
-#resume = True
-#load_from = 'https://download.openmmlab.com/mmyolo/v0/yolov7/yolov7_l_syncbn_fast_8x16b-300e_coco/yolov7_l_syncbn_fast_8x16b-300e_coco_20221123_023601-8113c0eb.pth'  # noqa
-load_from = '/home/ai_server/2005013/mmyolo/mmyolo/work_dirs/pretrain/yolov7_tiny_syncbn_fast_8x16b-300e_coco_20221126_102719-0ee5bbdf.pth'
 
 # 根据自己的 GPU 情况，修改 base_lr，修改的比例是 base_lr_default * (your_bs / default_bs)
 base_lr = _base_.base_lr * train_batch_size_per_gpu / (8 * 16)
-
-model = dict(
-    backbone=dict(frozen_stages=4),
-    bbox_head=dict(
-        head_module=dict(num_classes=num_classes),
-        prior_generator=dict(base_sizes=anchors),
-
-        # loss_cls 会根据 num_classes 动态调整，但是 num_classes = 1 的时候，loss_cls 恒为 0
-        # loss_cls=dict(loss_weight=0.5 *
-        #               (num_classes / 80 * 3 / _base_.num_det_layers))
-    ))
 
 train_dataloader = dict(
     batch_size=train_batch_size_per_gpu,
@@ -62,38 +35,38 @@ train_dataloader = dict(
     dataset=dict(
         data_root=data_root,
         metainfo=metainfo,
-        ann_file='annotations/instances_train2017.json',
-        data_prefix=dict(img='train2017/')))
+        ann_file='annotations/train.json',
+        data_prefix=dict(img='images/')))
 
 val_dataloader = dict(
     dataset=dict(
         metainfo=metainfo,
         data_root=data_root,
-        ann_file='annotations/instances_val2017.json',
-        data_prefix=dict(img='val2017/')))
+        ann_file='annotations/val.json',
+        data_prefix=dict(img='images/')))
 
 test_dataloader = dict(
     dataset=dict(
         metainfo=metainfo,
         data_root=data_root,
-        ann_file='annotations/instances_val2017.json',
-        data_prefix=dict(img='val2017/')))
+        ann_file='annotations/test.json',
+        data_prefix=dict(img='images/')))
 
 _base_.optim_wrapper.optimizer.batch_size_per_gpu = train_batch_size_per_gpu
 
 val_evaluator = dict(
     type='mmdet.CocoMetric',
     proposal_nums=(100, 1, 10),  # Can be accelerated
-    ann_file=data_root + 'annotations/instances_val2017.json',
+    ann_file=data_root + 'annotations/val.json',
     metric='bbox')
 # 在测试集上推理，
 # 并将检测结果转换格式以用于提交结果
 test_evaluator = dict(
     type='mmdet.CocoMetric',
-    ann_file=data_root + 'annotations/instances_val2017.json',
+    ann_file=data_root + 'annotations/val.json',
     metric='bbox',
     format_only=True,  # 只将模型输出转换为coco的 JSON 格式并保存
-    outfile_prefix='./work_dirs/coco_detection/test')  # 要保存的 JSON 文件的前缀
+    outfile_prefix='./work_dirs/eastcoast_5car')  # 要保存的 JSON 文件的前缀
 
 default_hooks = dict(
     checkpoint=dict(
