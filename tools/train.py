@@ -106,6 +106,8 @@ def main():
     # Determine whether the custom metainfo fields are all lowercase
     is_metainfo_lower(cfg)
 
+    cfg.activation_checkpointing =['backbone']
+
     # build the runner from config
     if 'runner_type' not in cfg:
         # build the default runner

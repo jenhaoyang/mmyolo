@@ -819,6 +819,75 @@ class MaxPoolAndStrideConvBlock(BaseModule):
 
 
 @MODELS.register_module()
+class V4TinyUpSampleBlock(BaseModule):
+    """Down sample layer for YOLOv7-tiny.
+
+    Args:
+        in_channels (int): The input channels of this Module.
+        out_channels (int): The out channels of this Module.
+        middle_ratio (float): The scaling ratio of the middle layer
+            based on the in_channels. Defaults to 1.0.
+        kernel_sizes (int, tuple[int]): Sequential or number of kernel
+             sizes of pooling layers. Defaults to 3.
+        conv_cfg (dict): Config dict for convolution layer. Defaults to None.
+            which means using conv2d. Defaults to None.
+        norm_cfg (dict): Config dict for normalization layer.
+            Defaults to dict(type='BN', momentum=0.03, eps=0.001).
+        act_cfg (dict): Config dict for activation layer.
+            Defaults to dict(type='LeakyReLU', negative_slope=0.1).
+        init_cfg (dict or list[dict], optional): Initialization config dict.
+            Defaults to None.
+    """
+
+    def __init__(
+            self,
+            in_channels: int,
+            out_channels: int,
+            middle_ratio: float = 1.0,
+            kernel_sizes: Union[int, Sequence[int]] = 3,
+            conv_cfg: OptConfigType = None,
+            norm_cfg: ConfigType = dict(type='BN', momentum=0.03, eps=0.001),
+            act_cfg: ConfigType = dict(type='LeakyReLU', negative_slope=0.1),
+            init_cfg: OptMultiConfig = None):
+        super().__init__(init_cfg)
+
+        self.main_convs = nn.ModuleList()
+        final_conv = ConvModule(
+            in_channels[0],
+            in_channels[0],
+            3,
+            padding=1,
+            norm_cfg=norm_cfg,
+            act_cfg=act_cfg)
+        self.main_convs.append(final_conv)
+        for i in range(2):
+            self.main_convs.append(
+                ConvModule(
+                    in_channels[i],
+                    out_channels[i],
+                    1,
+                    conv_cfg=conv_cfg,
+                    norm_cfg=norm_cfg,
+                    act_cfg=act_cfg))
+        self.up_sample = nn.Upsample(scale_factor=2)
+
+    def forward(self, x) -> Tensor:
+        main_outs = []
+        main_x = x[0][0]
+        for idx, main_conv in enumerate(self.main_convs):
+            main_out = main_conv(main_x)
+            if idx == 1:
+                main_outs.append(main_out)
+            main_x = main_out
+            if idx == 2:
+                main_out = self.up_sample(main_out)
+                out = torch.cat((main_out, x[0][1]), dim=1)
+                main_outs.append(out)
+
+        return main_outs
+
+
+@MODELS.register_module()
 class TinyDownSampleBlock(BaseModule):
     """Down sample layer for YOLOv7-tiny.
 
@@ -1053,8 +1122,10 @@ class SPPFCSPBlock(BaseModule):
         x2 = self.short_layer(x)
         return self.final_conv(torch.cat((x1, x2), dim=1))
 
+
 @MODELS.register_module()
 class SPPCSPBlock(BaseModule):
+
     def __init__(self,
                  in_channels: int,
                  out_channels: int,
@@ -1157,13 +1228,12 @@ class SPPCSPBlock(BaseModule):
             build_norm_layer(norm_cfg, 2 * mid_channels)[1],
             build_activation_layer(act_cfg),
             ConvModule(
-            2 * mid_channels,
-            out_channels,
-            1,
-            conv_cfg=conv_cfg,
-            norm_cfg=norm_cfg,
-            act_cfg=act_cfg)
-            )
+                2 * mid_channels,
+                out_channels,
+                1,
+                conv_cfg=conv_cfg,
+                norm_cfg=norm_cfg,
+                act_cfg=act_cfg))
 
     def forward(self, x) -> Tensor:
         """Forward process
@@ -1190,6 +1260,7 @@ class SPPCSPBlock(BaseModule):
 
         x2 = self.short_layer(x)
         return self.final_conv(torch.cat((x1, x2), dim=1))
+
 
 class ImplicitA(nn.Module):
     """Implicit add layer in YOLOv7.
@@ -1863,6 +1934,96 @@ class CSPSPPFBottleneck(BaseModule):
         x3 = self.conv6(self.conv5(x3))
         x = self.conv7(torch.cat([y, x3], dim=1))
         return x
+
+
+class Yolov4CSPTinyLayer(BaseModule):
+    """Yolov4 BottleneckCSP.
+
+    Args:
+        in_channels (int): The input channels of the CSP layer.
+        out_channels (int): The output channels of the CSP layer.
+        expand_ratio (float): Ratio to adjust the number of channels of the
+            hidden layer. Defaults to 0.5.
+        num_blocks (int): Number of blocks. Defaults to 1.
+        add_identity (bool): Whether to add identity in blocks.
+            Defaults to True.
+        use_cspnext_block (bool): Whether to use CSPNeXt block.
+            Defaults to False.
+        use_depthwise (bool): Whether to use depthwise separable convolution in
+            blocks. Defaults to False.
+        channel_attention (bool): Whether to add channel attention in each
+            stage. Defaults to True.
+        conv_cfg (dict, optional): Config dict for convolution layer.
+            Defaults to None, which means using conv2d.
+        norm_cfg (dict): Config dict for normalization layer.
+            Defaults to dict(type='BN')
+        act_cfg (dict): Config dict for activation layer.
+            Defaults to dict(type='Swish')
+        init_cfg (:obj:`ConfigDict` or dict or list[dict] or
+            list[:obj:`ConfigDict`], optional): Initialization config dict.
+            Defaults to None.
+    """
+
+    def __init__(self,
+                 in_channels: int,
+                 out_channels: int,
+                 conv_cfg: OptConfigType = None,
+                 norm_cfg: ConfigType = dict(
+                     type='BN', momentum=0.03, eps=0.001),
+                 act_cfg: ConfigType = dict(type='Leaky'),
+                 init_cfg: OptMultiConfig = None) -> None:
+        super().__init__(init_cfg=init_cfg)
+        mid_channels = in_channels // 2
+        self.start_conv = ConvModule(
+            in_channels,
+            in_channels,
+            3,
+            padding=1,
+            conv_cfg=conv_cfg,
+            norm_cfg=norm_cfg,
+            act_cfg=act_cfg)
+        self.main_conv_before_bottleneck = ConvModule(
+            mid_channels,
+            mid_channels,
+            3,
+            padding=1,
+            conv_cfg=conv_cfg,
+            norm_cfg=norm_cfg,
+            act_cfg=act_cfg)
+        self.block_conv = ConvModule(
+            mid_channels,
+            mid_channels,
+            3,
+            padding=1,
+            conv_cfg=conv_cfg,
+            norm_cfg=norm_cfg,
+            act_cfg=act_cfg)
+        self.main_conv_after_bottleneck = ConvModule(
+            2 * mid_channels,
+            2 * mid_channels,
+            1,
+            conv_cfg=conv_cfg,
+            norm_cfg=norm_cfg,
+            act_cfg=act_cfg)
+        self.final_pool = nn.MaxPool2d(kernel_size=2, stride=2)
+
+    def forward(self, x) -> Tensor:
+        """Forward function."""
+        if type(x) is tuple:
+            x = x[0]
+        x_short = self.start_conv(x)
+        x_main, _ = torch.split(x_short, int(x_short.shape[1] // 2), dim=1)
+
+        x_main_short = self.main_conv_before_bottleneck(x_main)
+        x_main_block = self.block_conv(x_main_short)
+
+        x_main = torch.cat((x_main_short, x_main_block), dim=1)
+        x_main = self.main_conv_after_bottleneck(x_main)
+
+        x_out = torch.cat((x_short, x_main), dim=1)
+        x_out = self.final_pool(x_out)
+
+        return x_out, x_main
 
 
 class Yolov4CSPLayer(BaseModule):

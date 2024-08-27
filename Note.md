@@ -3,18 +3,27 @@
 - 安裝albumentations可以試看看不要移除opencv，因為移除會讓opencv的RGB2BGR故障
 - albumentations >= 1.14.11 要直接手動幫mmdetection寫補丁https://github.com/open-mmlab/mmdetection/pull/11870/files
 
-* 訓練指令
+# 常用指令
+
+- 訓練指令
   python tools/train.py configs/custom_dataset/yolov4_l_mish_1xb16-300e_5car.py
 
-* inference 指令
+- inference 指令
   configs/custom_dataset/yolov4_l_mish_1xb16-300e_5car.py  weights/last.pt
 
-configs/yolov5/yolov5_s-v61_syncbn_fast_8xb16-300e_coco.py  weights/yolov5_s-v61_syncbn_fast_8xb16-300e_coco_20220918_084700-86e02187.pth
+- 列印config
+  python tools/misc/print_config.py configs/custom_dataset/yolov4_l_mish_1xb16-300e_5car.py --save-path /home/ai_server/2005013/mmyolo/mmyolo/my_exp/check_config.json
 
-- 命名規則
+- 切割訓練集
+  python tools/misc/coco_split.py --json data/eastcoast_5car/annotations/result.json \
+  --out-dir ./data/debug_eastcoast_5car/annotations \
+  --ratios 0.99 0.005 0.005\
+  --shuffle
+
+* 命名規則
   https://mmyolo.readthedocs.io/zh-cn/latest/tutorials/config.html?highlight=syncbn#id13
 
-- Hook說明
+* Hook說明
   https://mmengine.readthedocs.io/zh-cn/latest/design/hook.html
 
 ```python

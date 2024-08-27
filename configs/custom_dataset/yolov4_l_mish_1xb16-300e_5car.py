@@ -18,14 +18,25 @@ anchors = [
 ]
 
 # 根据自己的 GPU 情况，修改 batch size，YOLOv5-s 默认为 8卡 x 16bs
-train_batch_size_per_gpu = 16
+train_batch_size_per_gpu = 64
 train_num_workers = 4  # 推荐使用 train_num_workers = nGPU x 4
 
 save_epoch_intervals = 4  # 每 interval 轮迭代进行一次保存一次权重
 
-
 # 根据自己的 GPU 情况，修改 base_lr，修改的比例是 base_lr_default * (your_bs / default_bs)
 base_lr = _base_.base_lr * train_batch_size_per_gpu / (8 * 16)
+
+model = dict(
+    backbone=dict(frozen_stages=4),
+    bbox_head=dict(
+        head_module=dict(num_classes=num_classes),
+        loss_cls=dict(
+            type='mmdet.CrossEntropyLoss',
+            use_sigmoid=True,
+            reduction='mean',
+            loss_weight=_base_.loss_cls_weight *
+            (num_classes / 80 * 3 / _base_.num_det_layers))),
+)
 
 train_dataloader = dict(
     batch_size=train_batch_size_per_gpu,
